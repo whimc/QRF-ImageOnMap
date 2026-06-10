@@ -126,6 +126,10 @@ save-full-image: false
 
 ## Changelog
 
+### 5.1.4 — Minecraft 1.21.11 Update (QRF fork)
+
+- Fixed `StringIndexOutOfBoundsException` in QuartzLib's reflection helpers on Paper 1.20.5+ unversioned packages.
+
 ### 5.1.3 — Minecraft 1.21.11 Update (QRF fork)
 
 - Removed bStats metrics collection and Spigot update notifications.
