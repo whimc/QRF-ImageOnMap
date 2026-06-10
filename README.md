@@ -131,6 +131,10 @@ save-full-image: false
 
 ## Changelog
 
+### 5.1.2 — Minecraft 1.21.11 Update (QRF fork)
+
+- Fixed startup error on Paper 1.21+ (`NoClassDefFoundError: org/bukkit/potion/Potion`) by patching QuartzLib's configuration handlers for removed 1.21 APIs.
+
 ### 5.1.1 — Minecraft 1.21.11 Update (QRF fork)
 
 - Fixed startup error on Paper 1.21+ (`NoSuchFieldException: acceptingNew`) by replacing QuartzLib's glow enchantment hack with `ItemMeta#setEnchantmentGlintOverride`.
