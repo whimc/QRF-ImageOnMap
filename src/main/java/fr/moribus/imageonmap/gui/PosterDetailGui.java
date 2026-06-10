@@ -80,7 +80,7 @@ public class PosterDetailGui extends ExplorerGui<Integer> {
 
     @Override
     protected ItemStack getViewItem(int x, int y) {
-        final Material partMaterial = y % 2 == x % 2 ? Material.MAP : Material.PAPER;
+        final Material partMaterial = y % 2 == x % 2 ? Material.FILLED_MAP : Material.PAPER;
         ItemStackBuilder builder = new ItemStackBuilder(partMaterial);
         ItemStack itemStack = builder.craftItem();
 
@@ -101,7 +101,7 @@ public class PosterDetailGui extends ExplorerGui<Integer> {
     @Override
     protected ItemStack getViewItem(Integer posterId) {
         final int index = ((PosterMap) iposter).getIndex(posterId);
-        final Material partMaterial = index % 2 == 0 ? Material.MAP : Material.PAPER;
+        final Material partMaterial = index % 2 == 0 ? Material.FILLED_MAP : Material.PAPER;
 
         final ItemStackBuilder builder = new ItemStackBuilder(partMaterial)
                 .title(I.t(getPlayerLocale(), "{green}Map part"))

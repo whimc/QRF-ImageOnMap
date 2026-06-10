@@ -1,7 +1,9 @@
 ImageOnMap
 ==========
 
-Repo for ImageOnMap, a bukkit plugin.
+Fork of [zDevelopers/ImageOnMap](https://github.com/zDevelopers/ImageOnMap), maintained by [whimc](https://github.com/whimc) for Minecraft 1.21+.
+
+A Bukkit/Paper plugin that renders images onto Minecraft maps.
 
 
 ## Features
@@ -128,6 +130,13 @@ save-full-image: false
 ```
 
 ## Changelog
+
+### 5.1.1 — Minecraft 1.21.11 Update (QRF fork)
+
+- Fixed startup error on Paper 1.21+ (`NoSuchFieldException: acceptingNew`) by replacing QuartzLib's glow enchantment hack with `ItemMeta#setEnchantmentGlintOverride`.
+- Updated build target to Paper API 1.21.11 and Java 21.
+- Fixed removed `Material.MAP` references in the map detail GUI.
+- QuartzLib is now resolved via JitPack (the original zcraft Maven repository is offline).
 
 ### 3.0 — The From-Scratch Update
 

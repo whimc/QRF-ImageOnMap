@@ -1,85 +1,47 @@
-# Release the project.
-# To trigger, create a tag (not a release) with semantic
-# versioning (the tag must start with a v).
+# Publish a release when a version tag is pushed.
 #
-# git tag -am "Version 0.2" v0.2
-# git push && git push --tags
-#
-# This workflow will automatically:
-# - build the project using Maven;
-# - create a new draft release;
-# - attach the built project to the release.
+# git tag -a v5.1.1 -m "Version 5.1.1"
+# git push origin v5.1.1
 
-name: Publish new release
+name: Release
 
 on:
   push:
     tags:
       - 'v*'
 
-env:
-  JAVA_VERSION: 8
+permissions:
+  contents: write
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up Java ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v1
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
         with:
-          java-version: ${{ env.JAVA_VERSION }}
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
 
-      - name: Cache all the things
-        uses: actions/cache@v2
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
+      - name: Build
+        run: mvn -B clean package
 
-      - name: Extract project name
-        id: project-name
-        uses: actions/github-script@v3
-        with:
-          script: return context.repo.repo
-          result-encoding: string
-
-      - name: Build ${{ steps.project-name.outputs.result }}
-        id: maven-build
+      - name: Resolve release JAR
+        id: jar
         run: |
-          mvn -B clean install
+          JAR_PATH=$(ls ./target/ImageOnMap-*.jar | grep -v original | head -n 1)
+          echo "path=$JAR_PATH" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$JAR_PATH")" >> "$GITHUB_OUTPUT"
 
-          # Maven shade keeps the unshaded JAR under target/original-vvv.jar
-          # We don't want to put this unshaded JAR in the release because it wouldn't
-          # work on a server.
-          JAR_PATH=$(ls ./target/*.jar | grep -vE "^./[^/]+/original-" | tail -n 1)
-          JAR_NAME=$(basename $JAR_PATH)
-
-          echo "::set-output name=jar_path::$JAR_PATH"
-          echo "::set-output name=jar_name::$JAR_NAME"
-        env:
-          GIT_REF_NAME: ${{ github.ref }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create new GitHub Release
-        id: create-release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ steps.project-name.outputs.result }} ${{ github.ref }}
-          draft: true
-          prerelease: false
-
-      - name: Add ${{ steps.project-name.outputs.result }} JAR to GitHub Release
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ${{ steps.maven-build.outputs.jar_path }}
-          asset_name: ${{ steps.maven-build.outputs.jar_name }}
-          asset_content_type: application/java-archive
+          name: ImageOnMap ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: ${{ steps.jar.outputs.path }}

@@ -60,6 +60,7 @@ import fr.zcraft.quartzlib.components.i18n.I18n;
 import fr.zcraft.quartzlib.core.QuartzPlugin;
 import fr.zcraft.quartzlib.tools.PluginLogger;
 import fr.zcraft.quartzlib.tools.UpdateChecker;
+import fr.zcraft.quartzlib.tools.items.GlowEffect;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -161,7 +162,7 @@ public final class ImageOnMap extends QuartzPlugin {
         saveDefaultConfig();
         commandWorker = loadComponent(CommandWorkers.class);
         loadComponents(I18n.class, Gui.class, Commands.class, PluginConfiguration.class, ImageIOExecutor.class,
-                ImageRendererExecutor.class);
+                ImageRendererExecutor.class, GlowEffect.class);
 
         //Init all the things !
         I18n.setPrimaryLocale(PluginConfiguration.LANG.get());
