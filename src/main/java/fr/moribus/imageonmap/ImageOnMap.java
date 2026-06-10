@@ -59,13 +59,11 @@ import fr.zcraft.quartzlib.components.gui.Gui;
 import fr.zcraft.quartzlib.components.i18n.I18n;
 import fr.zcraft.quartzlib.core.QuartzPlugin;
 import fr.zcraft.quartzlib.tools.PluginLogger;
-import fr.zcraft.quartzlib.tools.UpdateChecker;
 import fr.zcraft.quartzlib.tools.items.GlowEffect;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import org.bstats.bukkit.Metrics;
 
 //TODO ERROR when loading plugin org.bukkit.plugin.InvalidPluginException: java.lang.NoClassDefFoundError:
 // fr/zcraft/imageonmap/quartzlib/core/QuartzPlugin
@@ -191,18 +189,6 @@ public final class ImageOnMap extends QuartzPlugin {
         Commands.registerShortcut(commandGroupName, ExploreCommand.class, "maps");
         Commands.registerShortcut(commandGroupName, GiveCommand.class, "givemap");
         Commands.registerShortcut(commandGroupName, RemotePlacingCommand.class, "placemap");
-
-        if (PluginConfiguration.CHECK_FOR_UPDATES.get()) {
-            UpdateChecker.boot("imageonmap.26585");
-        }
-
-        if (PluginConfiguration.COLLECT_DATA.get()) {
-            final Metrics metrics = new Metrics(this, 5920);
-            metrics.addCustomChart(new Metrics.SingleLineChart("rendered-images", PosterManager::getImagesCount));
-            metrics.addCustomChart(new Metrics.SingleLineChart("used-minecraft-maps", PosterManager::getPosterCount));
-        } else {
-            PluginLogger.warning("Collect data disabled");
-        }
     }
 
     @Override

@@ -108,11 +108,6 @@ You can grant `imageonmap.*` to users, as this permission is a shortcut for all 
 lang:
 
 
-# Allows collection of anonymous statistics on plugin environment and usage
-# The statistics are publicly visible here: http://mcstats.org/plugin/ImageOnMap
-collect-data: true
-
-
 # Images rendered on maps consume Minecraft maps ID, and there are only 32 767 of them.
 # You can limit the maximum number of maps a player, or the whole server, can use with ImageOnMap.
 # 0 means unlimited.
@@ -130,6 +125,10 @@ save-full-image: false
 ```
 
 ## Changelog
+
+### 5.1.3 — Minecraft 1.21.11 Update (QRF fork)
+
+- Removed bStats metrics collection and Spigot update notifications.
 
 ### 5.1.2 — Minecraft 1.21.11 Update (QRF fork)
 
@@ -255,9 +254,3 @@ This was tested on Paper 1.17, 1.16 and spigot 1.17, 1.15. If there are any erro
 - Fixed an issue in survival where an incorrect amount of map were consumed
 
 - Fixed an issue where image map folder was not created and cause issues
-
-## Data collection
-
-We use metrics to collect [basic information about the usage of this plugin](https://bstats.org/plugin/bukkit/ImageOnMap).
-This is 100% anonymous (you can check the source code or the network traffic), but can of course be disabled by setting
-`collect-data` to false in `config.yml`.
