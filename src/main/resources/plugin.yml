@@ -43,7 +43,7 @@ permissions:
       imageonmap.updateother: false
       imageonmap.bypassmaplimit: false
       imageonmap.bypassimagelimit: false
-      imageonmap.bypasswhitelist: true
+      imageonmap.bypasswhitelist: false
       imageonmap.placeinvisiblesplattermap: true
       imageonmap.remoteplacing: false
       imageonmap.repairmap: true

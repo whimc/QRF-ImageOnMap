@@ -50,15 +50,18 @@ import fr.zcraft.quartzlib.components.worker.WorkerCallback;
 import fr.zcraft.quartzlib.components.worker.WorkerRunnable;
 import fr.zcraft.quartzlib.tools.PluginLogger;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
+import java.net.InetAddress;
+import java.net.Proxy;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
+import javax.imageio.stream.MemoryCacheImageInputStream;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -105,20 +108,77 @@ public class ImageRendererExecutor extends Worker {
         });
     }
 
-    private static URLConnection connecting(URL url) throws IOException {
-        final URLConnection connection = url.openConnection();
-        connection.addRequestProperty("User-Agent",
-                "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:25.0) Gecko/20100101 Firefox/25.0");
-        connection.connect();
+    private static final int MAX_DOWNLOAD_BYTES = 16 * 1024 * 1024;
+    private static final long MAX_IMAGE_PIXELS = 16_000_000;
 
-        if (connection instanceof HttpURLConnection) {
-            final HttpURLConnection httpConnection = (HttpURLConnection) connection;
-            final int httpCode = httpConnection.getResponseCode();
-            if ((httpCode / 100) != 2) {
-                throw new IOException(I.t("HTTP error: {0} {1}", httpCode, httpConnection.getResponseMessage()));
+    private static boolean isPublicAddress(InetAddress address) {
+        if (address.isAnyLocalAddress() || address.isLoopbackAddress() || address.isLinkLocalAddress()
+                || address.isSiteLocalAddress() || address.isMulticastAddress()) {
+            return false;
+        }
+        byte[] bytes = address.getAddress();
+        int first = Byte.toUnsignedInt(bytes[0]);
+        int second = Byte.toUnsignedInt(bytes[1]);
+        if (bytes.length == 4) {
+            return first != 0 && first < 224 && !(first == 100 && second >= 64 && second <= 127)
+                    && !(first == 192 && (second == 0 || second == 168))
+                    && !(first == 198 && (second == 18 || second == 19));
+        }
+        // Allow global IPv6 unicast only, excluding transition and special-purpose ranges.
+        return (first & 0xe0) == 0x20 && !(first == 0x20 && (second == 1 || second == 2));
+    }
+
+    private static BufferedImage downloadImage(URL url) throws IOException {
+        if (!("http".equalsIgnoreCase(url.getProtocol()) || "https".equalsIgnoreCase(url.getProtocol()))
+                || url.getHost().isEmpty() || url.getUserInfo() != null) {
+            throw new IOException("Only public HTTP(S) image URLs are allowed.");
+        }
+        for (InetAddress address : InetAddress.getAllByName(url.getHost())) {
+            if (!isPublicAddress(address)) {
+                throw new IOException("Image URLs must resolve to public addresses.");
             }
         }
-        return connection;
+
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
+        connection.setInstanceFollowRedirects(false);
+        connection.setConnectTimeout(5000);
+        connection.setReadTimeout(5000);
+        try {
+            int status = connection.getResponseCode();
+            if (status / 100 == 3) {
+                throw new IOException("Image redirects are disabled. Use a direct image URL.");
+            }
+            if (status / 100 != 2) {
+                throw new IOException("HTTP error: " + status);
+            }
+            if (connection.getContentLengthLong() > MAX_DOWNLOAD_BYTES) {
+                throw new IOException("Image download exceeds 16 MiB.");
+            }
+            try (InputStream stream = connection.getInputStream()) {
+                byte[] data = stream.readNBytes(MAX_DOWNLOAD_BYTES + 1);
+                if (data.length > MAX_DOWNLOAD_BYTES) {
+                    throw new IOException("Image download exceeds 16 MiB.");
+                }
+                try (var input = new MemoryCacheImageInputStream(new ByteArrayInputStream(data))) {
+                    var readers = ImageIO.getImageReaders(input);
+                    if (!readers.hasNext()) {
+                        return null;
+                    }
+                    var reader = readers.next();
+                    try {
+                        reader.setInput(input, true, true);
+                        if ((long) reader.getWidth(0) * reader.getHeight(0) > MAX_IMAGE_PIXELS) {
+                            throw new IOException("Image exceeds 16 million pixels.");
+                        }
+                        return reader.read(0);
+                    } finally {
+                        reader.dispose();
+                    }
+                }
+            }
+        } finally {
+            connection.disconnect();
+        }
     }
 
     private static void checkSizeLimit(final UUID playerUUID, final BufferedImage image) throws IOException {
@@ -170,12 +230,7 @@ public class ImageRendererExecutor extends Worker {
                                 + ext.toString();
                         URL url2 = new URL(newLink);
 
-                        //Try connecting
-                        URLConnection connection = connecting(url2);
-
-                        final InputStream stream = connection.getInputStream();
-
-                        image = ImageIO.read(stream);
+                        image = downloadImage(url2);
 
                         //valid image
                         if (image != null) {
@@ -185,12 +240,7 @@ public class ImageRendererExecutor extends Worker {
                     }
 
                 } else {
-                    //Try connecting
-                    URLConnection connection = connecting(url);
-
-                    final InputStream stream = connection.getInputStream();
-
-                    image = ImageIO.read(stream);
+                    image = downloadImage(url);
                 }
                 if (image == null) {
                     throw new IOException(I.t("The given URL is not a valid image"));
@@ -213,11 +263,7 @@ public class ImageRendererExecutor extends Worker {
         submitQuery(new WorkerRunnable<ImagePoster>() {
             @Override
             public ImagePoster run() throws Throwable {
-                final URLConnection connection = connecting(url);
-
-                final InputStream stream = connection.getInputStream();
-                final BufferedImage image = ImageIO.read(stream);
-                stream.close();
+                final BufferedImage image = downloadImage(url);
 
                 if (image == null) {
                     throw new IOException(I.t("The given URL is not a valid image"));
