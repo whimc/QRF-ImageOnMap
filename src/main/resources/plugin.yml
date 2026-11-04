@@ -130,7 +130,7 @@ permissions:
 
   imageonmap.bypasswhitelist:
     description: "Allows you to ignore the restriction on the allow list for image hosting website."
-    default: true
+    default: false
 
   imageonmap.placeinvisiblesplattermap:
     description: "Allows you to make the item frame on which you placed your splatter map invisible."
