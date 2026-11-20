@@ -43,6 +43,14 @@
     <version>5.1.4</version>
     <packaging>jar</packaging>
 
+    <licenses>
+        <license>
+            <name>CeCILL Free Software License Agreement v2.1</name>
+            <url>https://spdx.org/licenses/CECILL-2.1.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>

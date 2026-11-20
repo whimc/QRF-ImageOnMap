@@ -17,8 +17,8 @@ ImageOnMap allows you to load a picture from the Internet to a Minecraft map.
 - Your image will be centered.
 - You can put your map in an item frame, or in multiple ones at once—ImageOnMap handles the placement for you!
 
-This plugin is a free software licenced under the [CeCILL-B licence](https://cecill.info/licences/Licence_CeCILL-B_V1-en.html)
-(BSD-style in French law).
+The WHIMC fork is distributed under the [CeCILL 2.1 license](LICENSE), matching the license text included in this repository.
+Redistributions must retain the required notices and provide access to the corresponding source code as specified by the license.
 
 
 ## Quick guide
